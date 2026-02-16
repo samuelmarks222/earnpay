@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, Share2, Bookmark, MoreHorizontal, TrendingUp, Coins } from "lucide-react";
+import { MessageCircle, Share2, Bookmark, MoreHorizontal, X, Coins, Globe, Users, ThumbsUp, Eye } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +15,7 @@ const PostCard = ({ post }: PostCardProps) => {
   const [showReactions, setShowReactions] = useState(false);
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
   const [localReactions, setLocalReactions] = useState(post.totalReactions);
+  const [showMore, setShowMore] = useState(false);
 
   const handleReaction = (emoji: string) => {
     if (selectedReaction === emoji) {
@@ -27,63 +28,99 @@ const PostCard = ({ post }: PostCardProps) => {
     setShowReactions(false);
   };
 
+  const shouldTruncate = post.content.length > 200;
+  const displayContent = shouldTruncate && !showMore ? post.content.slice(0, 200) + "..." : post.content;
+  const allImages = post.images || (post.image ? [post.image] : []);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Card className="overflow-hidden hover:shadow-md transition-shadow">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+      <Card className="overflow-hidden rounded-none sm:rounded-xl border-x-0 sm:border-x">
         <CardContent className="p-0">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 pb-2">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
+          <div className="flex items-start justify-between p-3 pb-1">
+            <div className="flex items-center gap-2.5">
+              <Avatar className="h-10 w-10 ring-2 ring-primary/20">
                 <AvatarImage src={post.author.avatar} alt={post.author.name} />
                 <AvatarFallback>{post.author.name[0]}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-semibold text-foreground">{post.author.name}</p>
-                <p className="text-xs text-muted-foreground">{post.createdAt}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-bold text-foreground">{post.author.name}</p>
+                  {post.isFollowable && (
+                    <>
+                      <span className="text-muted-foreground">•</span>
+                      <button className="text-xs font-semibold text-primary hover:underline">Follow</button>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span>{post.createdAt}</span>
+                  <span>•</span>
+                  {post.privacy === "public" ? <Globe className="h-3 w-3" /> : <Users className="h-3 w-3" />}
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               {post.earnedSEP > 0 && (
-                <Badge variant="secondary" className="gap-1 text-xs bg-primary/10 text-primary border-0">
-                  <Coins className="h-3 w-3" />
-                  +{post.earnedSEP} SEP
+                <Badge variant="secondary" className="gap-1 text-[10px] bg-primary/10 text-primary border-0 hidden sm:flex">
+                  <Coins className="h-3 w-3" />+{post.earnedSEP} SEP
                 </Badge>
               )}
               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                <X className="h-5 w-5" />
               </Button>
             </div>
           </div>
 
           {/* Content */}
-          <p className="px-4 pb-3 text-sm leading-relaxed">{post.content}</p>
+          <div className="px-3 pb-2">
+            <p className="text-sm leading-relaxed">
+              {displayContent}
+              {shouldTruncate && !showMore && (
+                <button className="text-muted-foreground font-medium ml-1" onClick={() => setShowMore(true)}>see more</button>
+              )}
+            </p>
+          </div>
 
-          {/* Image */}
-          {post.image && (
-            <div className="relative">
-              <img src={post.image} alt="" className="w-full object-cover max-h-96" />
-              {post.earnedSEP >= 50 && (
-                <div className="absolute top-3 right-3">
-                  <Badge className="gradient-gold text-gold-foreground gap-1 glow-gold border-0">
-                    <TrendingUp className="h-3 w-3" /> Viral Bonus
-                  </Badge>
+          {/* Images Grid */}
+          {allImages.length > 0 && (
+            <div className={`relative ${allImages.length === 1 ? "" : "grid gap-0.5"} ${
+              allImages.length === 2 ? "grid-cols-2" : allImages.length >= 3 ? "grid-cols-2" : ""
+            }`}>
+              {allImages.slice(0, 4).map((img, i) => (
+                <div
+                  key={i}
+                  className={`relative overflow-hidden cursor-pointer ${
+                    allImages.length === 3 && i === 0 ? "row-span-2" : ""
+                  } ${allImages.length === 1 ? "max-h-[500px]" : "aspect-square"}`}
+                >
+                  <img src={img} alt="" className="w-full h-full object-cover hover:brightness-95 transition-all" />
+                  {allImages.length > 4 && i === 3 && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="text-white text-2xl font-bold">+{allImages.length - 4}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {post.viewsCount && (
+                <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 text-white rounded-full px-2 py-0.5 text-xs">
+                  <Eye className="h-3 w-3" />
+                  {post.viewsCount >= 1000 ? `${(post.viewsCount / 1000).toFixed(0)}K` : post.viewsCount}
                 </div>
               )}
             </div>
           )}
 
           {/* Reaction Summary */}
-          <div className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground">
+          <div className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               {post.reactions.slice(0, 3).map((r) => (
                 <span key={r.type} className="text-sm">{r.type}</span>
               ))}
-              <span className="ml-1">{localReactions}</span>
+              <span className="ml-1">{localReactions.toLocaleString()}</span>
             </div>
             <div className="flex gap-3">
               <span>{post.commentsCount} comments</span>
@@ -92,8 +129,8 @@ const PostCard = ({ post }: PostCardProps) => {
           </div>
 
           {/* Actions */}
-          <div className="border-t mx-4" />
-          <div className="flex items-center px-2 py-1 relative">
+          <div className="border-t mx-3" />
+          <div className="flex items-center px-1 py-0.5 relative">
             <div
               className="relative flex-1"
               onMouseEnter={() => setShowReactions(true)}
@@ -102,11 +139,15 @@ const PostCard = ({ post }: PostCardProps) => {
               <Button
                 variant="ghost"
                 size="sm"
-                className={`w-full gap-2 text-xs ${selectedReaction ? "text-primary" : "text-muted-foreground"}`}
+                className={`w-full gap-1.5 text-xs ${selectedReaction ? "text-primary font-semibold" : "text-muted-foreground"}`}
                 onClick={() => handleReaction("👍")}
               >
-                <span className="text-base">{selectedReaction || "👍"}</span>
-                {selectedReaction ? "Reacted" : "React"}
+                {selectedReaction ? (
+                  <span className="text-base">{selectedReaction}</span>
+                ) : (
+                  <ThumbsUp className="h-4 w-4" />
+                )}
+                {selectedReaction ? localReactions.toLocaleString() : "Like"}
               </Button>
 
               <AnimatePresence>
@@ -132,14 +173,11 @@ const PostCard = ({ post }: PostCardProps) => {
               </AnimatePresence>
             </div>
 
-            <Button variant="ghost" size="sm" className="flex-1 gap-2 text-xs text-muted-foreground">
+            <Button variant="ghost" size="sm" className="flex-1 gap-1.5 text-xs text-muted-foreground">
               <MessageCircle className="h-4 w-4" /> Comment
             </Button>
-            <Button variant="ghost" size="sm" className="flex-1 gap-2 text-xs text-muted-foreground">
+            <Button variant="ghost" size="sm" className="flex-1 gap-1.5 text-xs text-muted-foreground">
               <Share2 className="h-4 w-4" /> Share
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-              <Bookmark className="h-4 w-4" />
             </Button>
           </div>
         </CardContent>
