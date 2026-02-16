@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, Share2, Bookmark, MoreHorizontal, X, Coins, Globe, Users, ThumbsUp, Eye } from "lucide-react";
+import { MessageCircle, Share2, Bookmark, MoreHorizontal, X, Coins, Globe, Users, ThumbsUp, Eye, Settings } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,8 +45,10 @@ const PostCard = ({ post }: PostCardProps) => {
               </Avatar>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <p className="text-sm font-bold text-foreground">{post.author.name}</p>
-                  {post.isFollowable && (
+                  <p className="text-sm font-bold text-foreground">
+                    {post.isSponsored ? post.sponsorName : post.author.name}
+                  </p>
+                  {post.isFollowable && !post.isSponsored && (
                     <>
                       <span className="text-muted-foreground">•</span>
                       <button className="text-xs font-semibold text-primary hover:underline">Follow</button>
@@ -54,9 +56,19 @@ const PostCard = ({ post }: PostCardProps) => {
                   )}
                 </div>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <span>{post.createdAt}</span>
-                  <span>•</span>
-                  {post.privacy === "public" ? <Globe className="h-3 w-3" /> : <Users className="h-3 w-3" />}
+                  {post.isSponsored ? (
+                    <>
+                      <span>Sponsored</span>
+                      <span>·</span>
+                      <Settings className="h-3 w-3" />
+                    </>
+                  ) : (
+                    <>
+                      <span>{post.createdAt}</span>
+                      <span>·</span>
+                      {post.privacy === "public" ? <Globe className="h-3 w-3" /> : <Users className="h-3 w-3" />}
+                    </>
+                  )}
                 </div>
               </div>
             </div>
