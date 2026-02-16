@@ -1,13 +1,29 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import MainLayout from "@/components/layout/MainLayout";
+import CreatePost from "@/components/feed/CreatePost";
+import PostCard from "@/components/feed/PostCard";
+import EarningsWidget from "@/components/feed/EarningsWidget";
+import { posts } from "@/lib/mock-data";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <MainLayout>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+        {/* Feed */}
+        <div className="space-y-4">
+          <CreatePost />
+          {posts.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))}
+        </div>
+
+        {/* Right Sidebar */}
+        <aside className="hidden lg:block">
+          <div className="sticky top-[72px]">
+            <EarningsWidget />
+          </div>
+        </aside>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
