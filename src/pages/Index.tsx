@@ -3,12 +3,11 @@ import CreatePost from "@/components/feed/CreatePost";
 import PostCard from "@/components/feed/PostCard";
 import StoriesRow from "@/components/feed/StoriesRow";
 import FriendRequests from "@/components/feed/FriendRequests";
-import EarningsWidget from "@/components/feed/EarningsWidget";
+import RightSidebar from "@/components/feed/RightSidebar";
 import ReelInterstitial from "@/components/feed/ReelInterstitial";
 import { posts, reels } from "@/lib/mock-data";
 
 const Index = () => {
-  // Build feed items with reels interleaved every 3 posts
   const feedItems: { type: "post" | "reel"; data: any }[] = [];
   let reelIndex = 0;
 
@@ -35,11 +34,9 @@ const Index = () => {
             )
           )}
         </div>
-        <aside className="hidden lg:block">
-          <div className="sticky top-[110px]">
-            <EarningsWidget />
-          </div>
-        </aside>
+        <div className="hidden lg:block">
+          <RightSidebar />
+        </div>
       </div>
     </MainLayout>
   );
