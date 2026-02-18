@@ -1,24 +1,40 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Home, Users, MessageCircle, MonitorPlay, Bell, Menu, Search, Plus, Wallet } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Home, Users, MessageCircle, MonitorPlay, Bell, Menu, Search, Plus, Wallet, LogOut, Settings, User } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { currentUser, earningStats } from "@/lib/mock-data";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { earningStats } from "@/lib/mock-data";
 import { motion } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
-  { icon: Home, label: "Home", path: "/", badge: "15+" },
+  { icon: Home, label: "Home", path: "/", badge: "" },
   { icon: Users, label: "Friends", path: "/friends", badge: "" },
   { icon: MessageCircle, label: "Messages", path: "/messages", badge: "" },
-  { icon: MonitorPlay, label: "Video", path: "/reels", badge: "15+" },
+  { icon: MonitorPlay, label: "Video", path: "/reels", badge: "" },
   { icon: Bell, label: "Notifications", path: "/notifications", badge: "3" },
   { icon: Menu, label: "Menu", path: "/menu", badge: "" },
 ];
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const avatarUrl = user?.user_metadata?.avatar_url || "";
+  const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur-xl">
@@ -50,24 +66,55 @@ const Navbar = () => {
           </Button>
 
           {/* Earnings Pill */}
-          <Link to="/earnings">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="hidden sm:flex items-center gap-1.5 rounded-full gradient-earn px-2.5 py-1 glow-earn cursor-pointer"
-            >
-              <Wallet className="h-3.5 w-3.5 text-earn-foreground" />
-              <span className="text-xs font-bold text-earn-foreground">
-                {earningStats.todayEarnings.toFixed(1)} SEP
-              </span>
-            </motion.div>
-          </Link>
+          {user && (
+            <Link to="/earnings">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="hidden sm:flex items-center gap-1.5 rounded-full gradient-earn px-2.5 py-1 glow-earn cursor-pointer"
+              >
+                <Wallet className="h-3.5 w-3.5 text-primary-foreground" />
+                <span className="text-xs font-bold text-primary-foreground">
+                  {earningStats.todayEarnings.toFixed(1)} SEP
+                </span>
+              </motion.div>
+            </Link>
+          )}
 
-          <Link to="/profile">
-            <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent hover:ring-primary/30 transition-all">
-              <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-              <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
-            </Avatar>
-          </Link>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent hover:ring-primary/30 transition-all">
+                  <AvatarImage src={avatarUrl} alt={displayName} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">{initials}</AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="gap-2 cursor-pointer">
+                    <User className="h-4 w-4" /> Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/earnings" className="gap-2 cursor-pointer">
+                    <Wallet className="h-4 w-4" /> Earnings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="gap-2 text-destructive cursor-pointer">
+                  <LogOut className="h-4 w-4" /> Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link to="/auth">
+              <Button size="sm" className="gradient-earn text-primary-foreground h-8 px-3 text-xs">Sign In</Button>
+            </Link>
+          )}
         </div>
       </div>
 

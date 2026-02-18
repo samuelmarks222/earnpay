@@ -99,11 +99,14 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          country: string | null
           cover_url: string | null
           created_at: string
+          date_of_birth: string | null
           followers_count: number | null
           friends_count: number | null
           full_name: string | null
+          gender: string | null
           id: string
           is_online: boolean | null
           location: string | null
@@ -115,11 +118,14 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          country?: string | null
           cover_url?: string | null
           created_at?: string
+          date_of_birth?: string | null
           followers_count?: number | null
           friends_count?: number | null
           full_name?: string | null
+          gender?: string | null
           id: string
           is_online?: boolean | null
           location?: string | null
@@ -131,11 +137,14 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          country?: string | null
           cover_url?: string | null
           created_at?: string
+          date_of_birth?: string | null
           followers_count?: number | null
           friends_count?: number | null
           full_name?: string | null
+          gender?: string | null
           id?: string
           is_online?: boolean | null
           location?: string | null

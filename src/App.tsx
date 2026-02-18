@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Earnings from "./pages/Earnings";
@@ -32,22 +33,22 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/earnings" element={<Earnings />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/groups" element={<Groups />} />
-            <Route path="/pages" element={<Pages />} />
-            <Route path="/reels" element={<Reels />} />
-            <Route path="/watch" element={<Watch />} />
-            <Route path="/menu" element={<MenuPage />} />
-            <Route path="/friends" element={<Friends />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/advertising" element={<Advertising />} />
-            <Route path="/saved" element={<Saved />} />
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/earnings" element={<ProtectedRoute><Earnings /></ProtectedRoute>} />
+            <Route path="/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
+            <Route path="/pages" element={<ProtectedRoute><Pages /></ProtectedRoute>} />
+            <Route path="/reels" element={<ProtectedRoute><Reels /></ProtectedRoute>} />
+            <Route path="/watch" element={<ProtectedRoute><Watch /></ProtectedRoute>} />
+            <Route path="/menu" element={<ProtectedRoute><MenuPage /></ProtectedRoute>} />
+            <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
+            <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+            <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+            <Route path="/advertising" element={<ProtectedRoute><Advertising /></ProtectedRoute>} />
+            <Route path="/saved" element={<ProtectedRoute><Saved /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
