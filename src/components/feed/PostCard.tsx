@@ -199,3 +199,5 @@ const PostCard = ({ post }: PostCardProps) => {
 };
 
 export default PostCard;
+
+export type { Post };
