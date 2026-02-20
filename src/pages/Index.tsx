@@ -4,6 +4,8 @@ import CreatePost from "@/components/feed/CreatePost";
 import PostCard from "@/components/feed/PostCard";
 import StoriesRow from "@/components/feed/StoriesRow";
 import RightSidebar from "@/components/feed/RightSidebar";
+import ReelInterstitial from "@/components/feed/ReelInterstitial";
+import FeedFriendSuggestions from "@/components/feed/FeedFriendSuggestions";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,11 +14,14 @@ import { useEarnings } from "@/hooks/useEarnings";
 type Post = any;
 
 const FEED_PAGE_SIZE = 10;
+const REEL_INTERVAL = 4; // Show a reel every N posts
+const FRIEND_SUGGESTION_INTERVAL = 10; // Show suggestions every N posts
 
 const Index = () => {
   const { user } = useAuth();
   const { awardSEP } = useEarnings();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [reels, setReels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -47,14 +52,26 @@ const Index = () => {
     if (pageNum === 0) setLoading(false); else setLoadingMore(false);
   }, []);
 
+  // Fetch reels (posts with post_type = 'reel' or video posts)
+  const fetchReels = useCallback(async () => {
+    const { data } = await supabase
+      .from('posts')
+      .select('*, profiles(id, full_name, avatar_url, username)')
+      .in('post_type', ['reel', 'video'])
+      .eq('privacy', 'public')
+      .order('created_at', { ascending: false })
+      .limit(10);
+    if (data) setReels(data);
+  }, []);
+
   useEffect(() => {
     fetchPosts(0, true);
-    // Award daily login SEP
+    fetchReels();
     if (user && !loginStreakGiven.current) {
       loginStreakGiven.current = true;
       awardSEP('daily_login', undefined, 'Daily login bonus');
     }
-  }, [fetchPosts, user]);
+  }, [fetchPosts, fetchReels, user]);
 
   // Infinite scroll
   useEffect(() => {
@@ -88,6 +105,31 @@ const Index = () => {
     fetchPosts(0, true);
   };
 
+  // Build interleaved feed items
+  const buildFeedItems = () => {
+    const items: { type: 'post' | 'reel' | 'suggestions'; data?: any; key: string }[] = [];
+    let reelIndex = 0;
+    let suggestionShown = false;
+
+    posts.forEach((post, i) => {
+      items.push({ type: 'post', data: post, key: post.id });
+
+      // Insert reel after every REEL_INTERVAL posts
+      if ((i + 1) % REEL_INTERVAL === 0 && reels[reelIndex]) {
+        items.push({ type: 'reel', data: reels[reelIndex], key: `reel-${reelIndex}` });
+        reelIndex++;
+      }
+
+      // Insert friend suggestions after FRIEND_SUGGESTION_INTERVAL posts
+      if ((i + 1) % FRIEND_SUGGESTION_INTERVAL === 0 && !suggestionShown) {
+        items.push({ type: 'suggestions', key: `suggestions-${i}` });
+        suggestionShown = true;
+      }
+    });
+
+    return items;
+  };
+
   return (
     <MainLayout>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
@@ -105,7 +147,29 @@ const Index = () => {
               <p className="mt-2">Be the first to share something.</p>
             </div>
           ) : (
-            posts.map(post => <PostCard key={post.id} post={post} />)
+            buildFeedItems().map(item => {
+              if (item.type === 'reel') {
+                const reel = item.data;
+                const reelFormatted = {
+                  id: reel.id,
+                  author: {
+                    name: reel.profiles?.full_name || 'User',
+                    avatar: reel.profiles?.avatar_url || '',
+                  },
+                  thumbnail: reel.media_urls?.[0] || 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=300&h=500&fit=crop',
+                  viewsCount: reel.views_count || 0,
+                  likesCount: reel.reactions_count || 0,
+                  commentsCount: reel.comments_count || 0,
+                  description: reel.content || '',
+                  earnedSEP: reel.sep_earned || 0,
+                };
+                return <ReelInterstitial key={item.key} reel={reelFormatted} />;
+              }
+              if (item.type === 'suggestions') {
+                return <FeedFriendSuggestions key={item.key} />;
+              }
+              return <PostCard key={item.key} post={item.data} />;
+            })
           )}
 
           {/* Infinite scroll trigger */}

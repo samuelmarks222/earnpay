@@ -12,6 +12,7 @@ import {
 import { earningStats } from "@/lib/mock-data";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/", badge: "" },
@@ -64,6 +65,7 @@ const Navbar = () => {
           <Button variant="ghost" size="icon" className="rounded-full bg-secondary h-9 w-9">
             <Plus className="h-5 w-5 text-foreground" />
           </Button>
+          <ThemeToggle />
 
           {/* Earnings Pill */}
           {user && (
