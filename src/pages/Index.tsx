@@ -38,7 +38,7 @@ const Index = () => {
 
     const { data, error } = await supabase
       .from('posts')
-      .select('*, profiles(id, full_name, avatar_url, username)')
+      .select('*, profiles!posts_author_id_fkey(id, full_name, avatar_url, username)')
       .eq('privacy', 'public')
       .order('created_at', { ascending: false })
       .range(from, to);
@@ -47,6 +47,9 @@ const Index = () => {
       const newPosts = data as unknown as Post[];
       setPosts(prev => reset ? newPosts : [...prev, ...newPosts]);
       setHasMore(newPosts.length === FEED_PAGE_SIZE);
+    } else {
+      // Stop infinite scroll on error
+      setHasMore(false);
     }
 
     if (pageNum === 0) setLoading(false); else setLoadingMore(false);
@@ -56,7 +59,7 @@ const Index = () => {
   const fetchReels = useCallback(async () => {
     const { data } = await supabase
       .from('posts')
-      .select('*, profiles(id, full_name, avatar_url, username)')
+      .select('*, profiles!posts_author_id_fkey(id, full_name, avatar_url, username)')
       .in('post_type', ['reel', 'video'])
       .eq('privacy', 'public')
       .order('created_at', { ascending: false })
