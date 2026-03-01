@@ -1,33 +1,64 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Users, ShoppingBag, Megaphone, CalendarDays, MonitorPlay, Pin, Wallet,
-  Bookmark, ChevronDown, ChevronUp, UserCircle, Newspaper, Flag, Settings, HelpCircle
+  Users, ShoppingBag, Megaphone, CalendarDays, MonitorPlay, Bookmark,
+  ChevronDown, ChevronUp, Newspaper, Clock, Wallet, BarChart3
 } from "lucide-react";
-import { currentUser, groups, earningStats } from "@/lib/mock-data";
-import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { supabase } from "@/integrations/supabase/client";
 
-const mainNav = [
-  { icon: UserCircle, label: currentUser.name, path: "/profile", avatar: currentUser.avatar },
-  { icon: Wallet, label: "Earnings Hub", path: "/earnings", badge: `+${earningStats.todayEarnings} SEP`, badgeColor: "bg-primary text-primary-foreground" },
-  { icon: Newspaper, label: "News Feed", path: "/" },
-  { icon: Users, label: "Friends", path: "/friends" },
-  { icon: Flag, label: "Pages", path: "/pages" },
-  { icon: ShoppingBag, label: "Marketplace", path: "/marketplace" },
-  { icon: Users, label: "Groups", path: "/groups" },
-  { icon: MonitorPlay, label: "Watch", path: "/watch" },
-  { icon: CalendarDays, label: "Events", path: "/events" },
-  { icon: Megaphone, label: "Advertising", path: "/advertising" },
-  { icon: Bookmark, label: "Saved", path: "/saved" },
-];
+interface SidebarGroup {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+}
 
 const LeftSidebar = () => {
   const location = useLocation();
+  const { user } = useAuth();
+  const { profile } = useProfile();
   const [showMore, setShowMore] = useState(false);
-  const pinnedGroups = groups.filter((g) => g.isPinned);
-  const joinedGroups = groups.filter((g) => g.isJoined);
+  const [groups, setGroups] = useState<SidebarGroup[]>([]);
+
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || "User";
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || "";
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchGroups = async () => {
+      const { data: memberships } = await supabase
+        .from("group_members")
+        .select("group_id")
+        .eq("user_id", user.id)
+        .limit(5);
+      if (memberships && memberships.length > 0) {
+        const groupIds = memberships.map(m => m.group_id);
+        const { data } = await supabase
+          .from("groups")
+          .select("id, name, avatar_url")
+          .in("id", groupIds);
+        setGroups((data || []) as SidebarGroup[]);
+      }
+    };
+    fetchGroups();
+  }, [user]);
+
+  const mainNav = [
+    { icon: null, label: displayName, path: "/profile", avatar: avatarUrl },
+    { icon: Users, label: "Friends", path: "/friends" },
+    { icon: Clock, label: "Memories", path: "/saved" },
+    { icon: Bookmark, label: "Saved", path: "/saved" },
+    { icon: Users, label: "Groups", path: "/groups" },
+    { icon: MonitorPlay, label: "Reels", path: "/reels" },
+    { icon: ShoppingBag, label: "Marketplace", path: "/marketplace" },
+    { icon: Newspaper, label: "Feeds", path: "/" },
+    { icon: CalendarDays, label: "Events", path: "/events" },
+    { icon: Megaphone, label: "Ads Manager", path: "/advertising" },
+    { icon: Wallet, label: "Earnings Hub", path: "/earnings" },
+  ];
 
   const visibleNav = showMore ? mainNav : mainNav.slice(0, 7);
 
@@ -36,32 +67,27 @@ const LeftSidebar = () => {
       <div className="sticky top-[100px]">
         <ScrollArea className="h-[calc(100vh-110px)] pr-2">
           <nav className="space-y-0.5 pb-2">
-            {visibleNav.map((item) => {
-              const active = location.pathname === item.path;
+            {visibleNav.map((item, idx) => {
+              const active = location.pathname === item.path && idx !== 0;
               return (
                 <Link
-                  key={item.path + item.label}
+                  key={item.path + item.label + idx}
                   to={item.path}
                   className={`flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors hover:bg-secondary ${
                     active ? "bg-secondary font-semibold text-foreground" : "text-foreground"
                   }`}
                 >
-                  {item.avatar ? (
-                    <Avatar className="h-8 w-8">
+                  {item.avatar !== undefined ? (
+                    <Avatar className="h-9 w-9">
                       <AvatarImage src={item.avatar} />
-                      <AvatarFallback>{item.label[0]}</AvatarFallback>
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">{item.label[0]}</AvatarFallback>
                     </Avatar>
-                  ) : (
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${active ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}>
+                  ) : item.icon ? (
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-full ${active ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}>
                       <item.icon className="h-5 w-5" />
                     </div>
-                  )}
+                  ) : null}
                   <span className="flex-1 truncate">{item.label}</span>
-                  {item.badge && (
-                    <Badge className={`text-[10px] px-1.5 py-0 h-5 border-0 ${item.badgeColor || "bg-destructive text-destructive-foreground"}`}>
-                      {item.badge}
-                    </Badge>
-                  )}
                 </Link>
               );
             })}
@@ -70,56 +96,35 @@ const LeftSidebar = () => {
               onClick={() => setShowMore(!showMore)}
               className="flex items-center gap-3 rounded-lg px-2 py-2 text-sm text-muted-foreground hover:bg-secondary w-full transition-colors"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary">
                 {showMore ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </div>
               <span>{showMore ? "See less" : "See more"}</span>
             </button>
           </nav>
 
-          {/* Pinned Groups */}
-          {pinnedGroups.length > 0 && (
+          {/* Your Shortcuts (Groups) */}
+          {groups.length > 0 && (
             <div className="border-t pt-3 mt-2">
-              <div className="flex items-center gap-2 px-2 mb-2">
-                <Pin className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Pinned Groups</span>
+              <div className="flex items-center justify-between px-2 mb-2">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Your Shortcuts</span>
+                <Link to="/groups" className="text-xs text-primary hover:underline">See All</Link>
               </div>
-              {pinnedGroups.map((group) => (
+              {groups.map((group) => (
                 <Link
                   key={group.id}
                   to="/groups"
                   className="flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-secondary transition-colors"
                 >
-                  <img src={group.cover} alt={group.name} className="h-8 w-8 rounded-lg object-cover" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate text-foreground">{group.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{group.lastActive}</p>
-                  </div>
-                  {group.postsToday > 0 && (
-                    <div className="h-2 w-2 rounded-full bg-primary shrink-0" />
-                  )}
+                  <Avatar className="h-9 w-9 rounded-lg">
+                    <AvatarImage src={group.avatar_url || ""} className="rounded-lg" />
+                    <AvatarFallback className="rounded-lg bg-secondary text-muted-foreground text-xs">{group.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <span className="flex-1 truncate text-foreground">{group.name}</span>
                 </Link>
               ))}
             </div>
           )}
-
-          {/* Group Shortcuts */}
-          <div className="border-t pt-3 mt-2">
-            <div className="flex items-center justify-between px-2 mb-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Your Shortcuts</span>
-              <Link to="/groups" className="text-xs text-primary hover:underline">See All</Link>
-            </div>
-            {joinedGroups.slice(0, 4).map((group) => (
-              <Link
-                key={group.id}
-                to="/groups"
-                className="flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-secondary transition-colors"
-              >
-                <img src={group.cover} alt={group.name} className="h-8 w-8 rounded-lg object-cover" />
-                <span className="flex-1 truncate text-foreground">{group.name}</span>
-              </Link>
-            ))}
-          </div>
 
           <div className="pt-4 pb-6 px-2">
             <p className="text-[11px] text-muted-foreground">

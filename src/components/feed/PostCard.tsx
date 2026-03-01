@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import PostComments from "./PostComments";
 
 const reactionEmojis = ["👍", "❤️", "😂", "😮", "😢", "😡"];
 
@@ -21,8 +22,8 @@ const PostCard = ({ post }: PostCardProps) => {
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
   const [localReactions, setLocalReactions] = useState(post.reactions_count || 0);
   const [showMore, setShowMore] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
-  // Handle both mock and real data shapes
   const authorName = post.profiles?.full_name || post.author?.name || "User";
   const authorAvatar = post.profiles?.avatar_url || post.author?.avatar || "";
   const authorInitials = authorName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
@@ -154,7 +155,9 @@ const PostCard = ({ post }: PostCardProps) => {
               <span className="ml-1">{localReactions.toLocaleString()}</span>
             </div>
             <div className="flex gap-3">
-              <span>{commentsCount} comments</span>
+              <button onClick={() => setShowComments(!showComments)} className="hover:underline">
+                {commentsCount} comments
+              </button>
               <span>{sharesCount} shares</span>
             </div>
           </div>
@@ -204,13 +207,20 @@ const PostCard = ({ post }: PostCardProps) => {
               </AnimatePresence>
             </div>
 
-            <Button variant="ghost" size="sm" className="flex-1 gap-1.5 text-xs text-muted-foreground">
+            <Button variant="ghost" size="sm" className="flex-1 gap-1.5 text-xs text-muted-foreground" onClick={() => setShowComments(!showComments)}>
               <MessageCircle className="h-4 w-4" /> Comment
             </Button>
             <Button variant="ghost" size="sm" className="flex-1 gap-1.5 text-xs text-muted-foreground">
               <Share2 className="h-4 w-4" /> Share
             </Button>
           </div>
+
+          {/* Comments section */}
+          {showComments && (
+            <div className="border-t">
+              <PostComments postId={post.id} commentsCount={commentsCount} />
+            </div>
+          )}
         </CardContent>
       </Card>
     </motion.div>
