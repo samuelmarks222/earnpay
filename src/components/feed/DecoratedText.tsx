@@ -1,7 +1,15 @@
 import * as React from "react";
 
+type TokenColors = {
+  hashtag?: string;
+  mention?: string;
+  link?: string;
+  bold?: string;
+};
+
 type Props = {
   text: string;
+  tokenColors?: TokenColors;
 };
 
 // Simple tokenizer that renders:
@@ -10,7 +18,7 @@ type Props = {
 // - mentions like @user with a badge
 // - links as clickable blue underlined text
 // - plain text as default
-const DecoratedText: React.FC<Props> = ({ text }) => {
+const DecoratedText: React.FC<Props> = ({ text, tokenColors }) => {
   // First, handle bold segments with **bold** syntax
   const segments: { type: "plain" | "bold"; value: string }[] = [];
   let lastIndex = 0;
@@ -27,6 +35,12 @@ const DecoratedText: React.FC<Props> = ({ text }) => {
     segments.push({ type: "plain", value: text.substring(lastIndex) });
   }
 
+  // Prepare color classes (defaults can be overridden via tokenColors)
+  const hashtagClass = tokenColors?.hashtag ?? "inline-flex items-center bg-rose-100 text-rose-700 text-xs px-2 py-0.5 rounded-full mx-1";
+  const mentionClass = tokenColors?.mention ?? "inline-flex items-center bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full mx-1";
+  const linkClass = tokenColors?.link ?? "text-teal-700 underline";
+  const boldClass = tokenColors?.bold ?? "font-semibold";
+
   // Now split plain segments further into links, hashtags, and mentions
   const renderParts: React.ReactNode[] = [];
   let keyCounter = 0;
@@ -35,7 +49,7 @@ const DecoratedText: React.FC<Props> = ({ text }) => {
   const tokenRe = /(https?:\/\/[^\s]+)|(#[\w-]+)|(@[\w.-]+)/g;
   for (const seg of segments) {
     if (seg.type === "bold") {
-      renderParts.push(<span key={keyCounter++} className="font-semibold">{seg.value}</span>);
+      renderParts.push(<span key={keyCounter++} className={boldClass}>{seg.value}</span>);
       continue;
     }
     // seg.type === 'plain'
@@ -49,19 +63,19 @@ const DecoratedText: React.FC<Props> = ({ text }) => {
       const token = tok[0];
       if (token.startsWith("http")) {
         renderParts.push(
-          <a key={keyCounter++} href={token} target="_blank" rel="noreferrer" className="text-teal-700 underline">
+          <a key={keyCounter++} href={token} target="_blank" rel="noreferrer" className={linkClass}>
             {token}
           </a>
         );
       } else if (token.startsWith("#")) {
         renderParts.push(
-          <span key={keyCounter++} className="inline-flex items-center bg-rose-100 text-rose-700 text-xs px-2 py-0.5 rounded-full mx-1">
+          <span key={keyCounter++} className={hashtagClass}>
             {token}
           </span>
         );
       } else if (token.startsWith("@")) {
         renderParts.push(
-          <span key={keyCounter++} className="inline-flex items-center bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full mx-1">
+          <span key={keyCounter++} className={mentionClass}>
             {token}
           </span>
         );
