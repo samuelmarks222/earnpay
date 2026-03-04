@@ -210,7 +210,15 @@ const PostCard = ({ post }: PostCardProps) => {
             <Button variant="ghost" size="sm" className="flex-1 gap-1.5 text-xs text-muted-foreground" onClick={() => setShowComments(!showComments)}>
               <MessageCircle className="h-4 w-4" /> Comment
             </Button>
-            <Button variant="ghost" size="sm" className="flex-1 gap-1.5 text-xs text-muted-foreground">
+            <Button variant="ghost" size="sm" className="flex-1 gap-1.5 text-xs text-muted-foreground" onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(window.location.origin + "/?post=" + post.id);
+                // Optionally increment share count
+                if (user) {
+                  await supabase.from('posts').update({ shares_count: (sharesCount || 0) + 1 }).eq('id', post.id);
+                }
+              } catch {}
+            }}>
               <Share2 className="h-4 w-4" /> Share
             </Button>
           </div>
