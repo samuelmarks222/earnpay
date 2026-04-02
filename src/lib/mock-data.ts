@@ -233,14 +233,14 @@ export const posts: Post[] = [
   },
   {
     id: "p3", author: users[2],
-    content: "Morning coffee and code. There's nothing like solving a tricky bug before 9 AM. What's your morning routine? ☕💻",
+    content: "Morning **coffee** and code. There's nothing like solving a tricky bug before 9 AM. What's your morning routine? ☕💻 #morning",
     createdAt: "4 hours ago",
     reactions: [{ type: "❤️", count: 89 }, { type: "😂", count: 12 }],
     totalReactions: 101, commentsCount: 34, sharesCount: 8, earnedSEP: 22.0, privacy: "friends",
   },
   {
     id: "p4", author: users[3],
-    content: "Excited to announce I just hit 4,000 SEP! 🎉 The earning system on SocialEarn is genuinely rewarding. My content is finally being valued. Thank you to everyone who engages with my posts!",
+    content: "Excited to announce I just hit 4,000 SEP! 🎉 The earning system on SocialEarn is genuinely rewarding. My content is finally being valued. Thank you to everyone who engages with my posts! https://example.com",
     createdAt: "6 hours ago",
     reactions: [{ type: "❤️", count: 312 }, { type: "🔥", count: 89 }, { type: "👏", count: 67 }, { type: "🎉", count: 45 }],
     totalReactions: 513, commentsCount: 92, sharesCount: 56, earnedSEP: 125.0, privacy: "public",
@@ -266,7 +266,7 @@ export const posts: Post[] = [
   },
   {
     id: "p7", author: currentUser,
-    content: "Just explored the new earnings dashboard — love how transparent SocialEarn is about revenue sharing. This is how social media should work! 💚",
+    content: "Just explored the new **earnings dashboard** — love how transparent SocialEarn is about revenue sharing. This is how social media should work! 💚 #earnings",
     image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop",
     createdAt: "12 hours ago",
     reactions: [{ type: "❤️", count: 156 }, { type: "👏", count: 42 }],

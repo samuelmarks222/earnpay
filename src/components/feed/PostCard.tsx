@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import PostComments from "./PostComments";
+import DecoratedText from "./DecoratedText";
 
 const reactionEmojis = ["👍", "❤️", "😂", "😮", "😢", "😡"];
 
@@ -107,11 +108,11 @@ const PostCard = ({ post }: PostCardProps) => {
             </div>
           </div>
 
-          {/* Content */}
+          {/* Content with decorations */}
           {content && (
             <div className="px-3 pb-2">
               <p className="text-sm leading-relaxed">
-                {displayContent}
+                <DecoratedText text={displayContent} />
                 {shouldTruncate && !showMore && (
                   <button className="text-muted-foreground font-medium ml-1" onClick={() => setShowMore(true)}>see more</button>
                 )}
